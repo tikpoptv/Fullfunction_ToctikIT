@@ -84,4 +84,4 @@ Workflow ไม่ rollback อัตโนมัติเมื่อ smoke ล
 
 Auto Deploy main commit `88c3dcf7488457eeed87da1335e13cfad6b3ce1c` ใช้ digest `d1426fd2117a0b47c57251669a3557b8a939c86b7b13a7a658bae6fd63a8d002` รอบ rollback เปลี่ยนกลับ image เดิมจริง; revision ล่าสุดให้ดู Console/run ล่าสุด เพราะจะเปลี่ยนเมื่อมี release ถัดไป
 
-ขอบเขตที่ยังไม่พิสูจน์: business E2E สร้าง/แก้ ticket, session/ไฟล์แนบรอด redeploy และ rollback ที่มี destructive schema migration ข้ามรุ่น อย่าอ้างว่าทดสอบครบจาก health/smoke ที่ผ่าน ตัวอย่าง PR test ล้มใช้พิสูจน์ merge gate ไม่ได้ merge โค้ดเสียเข้า main เพื่อทดลอง deploy gate
+อัปเดต: ตรวจ ticket/roles/actions/dashboard และ session/attachment persistence บน Cloud จริงแล้ว รวมถึงพบและแก้ UI regressions สองจุดใน PR #5 ดู [ผล Cloud acceptance](cloud-acceptance-th.md) ส่วน rollback ข้าม destructive schema migration ยังไม่ได้พิสูจน์ ตัวอย่าง PR test ล้มใช้พิสูจน์ merge gate ไม่ได้ merge โค้ดเสียเข้า main เพื่อทดลอง deploy gate
