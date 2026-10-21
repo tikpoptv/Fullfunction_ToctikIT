@@ -27,6 +27,14 @@ GitHub Environment `demo` อนุญาตเฉพาะ branch `main` ตั
 
 เปิด IAM Service Account Credentials API และ Security Token Service API แล้วตั้ง Workload Identity Federation ตาม [คู่มือ Google](https://github.com/google-github-actions/auth#workload-identity-federation-through-a-service-account) ไม่ต้องดาวน์โหลด service-account key
 
+ก่อนเขียนเงื่อนไข subject ให้ตรวจรูปแบบ OIDC ของ fork ตัวเอง:
+
+```bash
+gh api repos/OWNER/REPO/actions/oidc/customization/sub
+```
+
+รอบนี้ `use_immutable_subject=true` และ `sub_claim_prefix` คือ `repo:tikpoptv@41636063/Fullfunction_ToctikIT@1427046719` ต้องต่อท้าย `:environment:demo` ในเงื่อนไข subject หากใช้รูปแบบเดิมที่ไม่มี ID จะถูกปฏิเสธด้วย `The given credential is rejected by the attribute condition` อ่าน [GitHub OIDC reference](https://docs.github.com/en/actions/reference/security/oidc#immutable-subject-claims) และตรวจค่าจริงของแต่ละ fork ไม่คัดลอก ID ของทีมไปใช้
+
 ขอบเขตสิทธิ์รอบทีม:
 
 - Deployer SA: `roles/run.developer` ในโปรเจกต์ทดสอบ
@@ -62,4 +70,18 @@ Workflow ไม่ rollback อัตโนมัติเมื่อ smoke ล
 
 ## หลักฐานรอบทีม
 
-ขณะจัดทำเอกสาร: offline release tests และ smoke tests ผ่าน; ผล GitHub CI, WIF, Auto Deploy, required merge gate และ rollback จริงต้องลงหลัง run เสร็จ โดยแยกจากผลทดสอบบนเครื่อง
+ตรวจวันที่ 21 ต.ค. 2026 (Asia/Bangkok):
+
+| รายการ | ผลและหลักฐาน |
+|---|---|
+| Offline provisioning/release/smoke tests | ผ่าน; รวม migration failure ต้องไม่ update เว็บ และ rollback ต้องไม่รัน migration |
+| PR CI | [run 39599347792](https://github.com/tikpoptv/Fullfunction_ToctikIT/actions/runs/39599347792) ผ่านก่อน merge PR #1 |
+| Merge gate จริง | [PR #2](https://github.com/tikpoptv/Fullfunction_ToctikIT/pull/2) เป็น PR ปกติและตรง main; test ล้มพร้อมป้าย Required, mergeable_state=blocked และปุ่ม Merge disabled; ปิดโดยไม่ merge |
+| Auto Deploy เมื่อ merge main | [run 39599526273 attempt 2](https://github.com/tikpoptv/Fullfunction_ToctikIT/actions/runs/39599526273/attempts/2) ผ่าน CI, WIF, build/push, migration และ smoke |
+| Rollback จริง | [run 39600194691](https://github.com/tikpoptv/Fullfunction_ToctikIT/actions/runs/39600194691) ใช้ tag b744eed61413c380c188b5ee7d62b8ea2d402798; test/build ถูก skipped และ smoke ผ่าน |
+| Provider read-back หลัง rollback | revision toktickit-00003-8bt traffic100% ใช้ digest dfec78b522432c537b44ea61f25cd38a05e5170ad4893d3cd8ac6feaab10df54 ตรง image แรกที่เคย Deploy สำเร็จ |
+| Login หลัง Auto Deploy | ตรวจแยกจาก workflow: login/me/logout ผ่าน; ไม่ได้ใส่รหัส admin ลง GitHub Secrets |
+
+Auto Deploy main commit `88c3dcf7488457eeed87da1335e13cfad6b3ce1c` ใช้ digest `d1426fd2117a0b47c57251669a3557b8a939c86b7b13a7a658bae6fd63a8d002` รอบ rollback เปลี่ยนกลับ image เดิมจริง; revision ล่าสุดให้ดู Console/run ล่าสุด เพราะจะเปลี่ยนเมื่อมี release ถัดไป
+
+ขอบเขตที่ยังไม่พิสูจน์: business E2E สร้าง/แก้ ticket, session/ไฟล์แนบรอด redeploy และ rollback ที่มี destructive schema migration ข้ามรุ่น อย่าอ้างว่าทดสอบครบจาก health/smoke ที่ผ่าน ตัวอย่าง PR test ล้มใช้พิสูจน์ merge gate ไม่ได้ merge โค้ดเสียเข้า main เพื่อทดลอง deploy gate
