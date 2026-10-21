@@ -6,6 +6,7 @@ import {
   changePassword,
   fetchCategories,
   fetchSystems,
+  fetchAssignees,
   createTicket,
   fetchTickets,
   fetchTicketDetails,
@@ -29,6 +30,7 @@ import {
   updateAdminUser,
   resetUserPassword,
   User,
+  Assignee,
   Category,
   RelatedSystem,
   Ticket,
@@ -167,7 +169,7 @@ export default function App() {
   const [editActionError, setEditActionError] = useState("");
 
   // IT Staff List (for ticket assignment)
-  const [itStaffList, setItStaffList] = useState<User[]>([]);
+  const [itStaffList, setItStaffList] = useState<Assignee[]>([]);
 
   // Admin User Management States
   const [adminUsers, setAdminUsers] = useState<User[]>([]);
@@ -262,18 +264,17 @@ export default function App() {
       setSystems(prev => (prev.length > 0 ? prev : DEFAULT_SYSTEMS));
     }
 
-    try {
-      if (typeof fetchAdminUsers === "function") {
-        const users = await fetchAdminUsers("", "ITStaff");
-        const admins = await fetchAdminUsers("", "Administrator");
-        if (Array.isArray(users) && Array.isArray(admins)) {
-          setItStaffList([...users, ...admins].filter(u => u.isActive));
-        }
-      }
-    } catch (_err) {
-      // Ignore reference loading error in restricted views
-    }
   };
+
+  useEffect(() => {
+    let active = true;
+    setItStaffList([]);
+    if (!currentUser || currentUser.mustChangePassword || currentUser.role === "Requester") return;
+    fetchAssignees()
+      .then(rows => { if (active) setItStaffList(rows); })
+      .catch(() => { if (active) setItStaffList([]); });
+    return () => { active = false; };
+  }, [currentUser]);
 
   useEffect(() => {
     if (screen === "create" && (categories.length === 0 || systems.length === 0)) {
@@ -576,8 +577,9 @@ export default function App() {
       setActionFollowUpNote("");
       setActionAttachmentNotes("");
 
-      const acts = await fetchActionsTaken(ticketDetails.id);
-      setActionsTakenList(acts);
+      // Creating an action also changes Ticket.updatedAt on the server.
+      // Refresh the version used by subsequent owner/status/priority writes.
+      await loadTicketDetails();
     } catch (err: any) {
       setActionError(err.message || "Failed to add action taken.");
     } finally {
@@ -1685,7 +1687,7 @@ export default function App() {
                       id="ownerSelect"
                       className="form-select form-select-sm"
                       value={ticketDetails.ownerId || ""}
-                      disabled={workflowUpdating}
+                      disabled={workflowUpdating || actionSubmitting}
                       onChange={(e) => handleOwnerChange(e.target.value)}
                     >
                       <option value="">Unassigned</option>
@@ -1698,7 +1700,7 @@ export default function App() {
                       id="statusSelect"
                       className="form-select form-select-sm"
                       value={ticketDetails.currentStatus}
-                      disabled={workflowUpdating}
+                      disabled={workflowUpdating || actionSubmitting}
                       onChange={(e) => handleStatusChange(e.target.value)}
                     >
                       <option value={ticketDetails.currentStatus}>{ticketDetails.currentStatus} (Current)</option>
@@ -1715,7 +1717,7 @@ export default function App() {
                       id="prioritySelect"
                       className="form-select form-select-sm"
                       value={ticketDetails.itPriority || ticketDetails.requestedPriority}
-                      disabled={workflowUpdating}
+                      disabled={workflowUpdating || actionSubmitting}
                       onChange={(e) => handlePriorityChange(e.target.value)}
                     >
                       <option value="LOW">LOW</option>

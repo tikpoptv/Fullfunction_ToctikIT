@@ -342,6 +342,20 @@ app.get("/api/requesters", authenticate, requireRole(["ITStaff", "Administrator"
   }
 });
 
+// Read-only assignment choices; user administration remains admin-only.
+app.get("/api/assignees", authenticate, requireRole(["ITStaff", "Administrator"]), async (_req: Request, res: Response) => {
+  try {
+    const assignees = await getPrisma().user.findMany({
+      where: { isActive: true, role: { in: ["ITStaff", "Administrator"] } },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, role: true },
+    });
+    res.status(200).json(assignees);
+  } catch (_error) {
+    res.status(500).json({ error: "Failed to fetch assignees" });
+  }
+});
+
 // 4. Categories & Systems Endpoints
 const DEFAULT_CATEGORIES = ["Account and Access", "Hardware", "Software", "Network"];
 const DEFAULT_SYSTEMS = [
