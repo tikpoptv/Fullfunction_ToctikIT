@@ -1,6 +1,8 @@
 # คู่มือเตรียม GCP และ CI/CD สำหรับ TokTickIT
 
-สถานะ: **Deploy และเปิดลิงก์สาธารณะแล้ว; business E2E/CD ยังไม่ครบ** — 21 ตุลาคม 2026 (Asia/Bangkok)
+สถานะ: **Deploy สาธารณะและ Auto Deploy ผ่านแล้ว; business E2E ยังไม่ครบ** — 21 ตุลาคม 2026 (Asia/Bangkok)
+
+คู่มือ Auto Deploy และ Rollback อยู่ที่ [Auto Deploy](auto-deploy-th.md)
 
 เริ่มสำรวจจาก source commit `ab3eecb10390fce801f69c422677d13faa239898` ของ fork `tikpoptv/Fullfunction_ToctikIT` แล้วใช้ runtime source `b744eed61413c380c188b5ee7d62b8ea2d402798` ที่แก้ log และผ่าน CI สำหรับ Deploy ครั้งแรก อ่านบทซ้อมตามขั้นตอนสั้นได้ที่ [บทซ้อมแรก](gcp-first-lab-th.md)
 
@@ -31,10 +33,10 @@
 | Fork และ upstream | ตรวจ GitHub parent แล้วและตั้ง remote; ตอน fetch `origin/main` กับ `upstream/main` ต่างกัน 0/0 commits |
 | Deploy script | syntax, dry-run, offline regression และ Deploy ครั้งแรกผ่าน; public IAM มี warning |
 | Build / tests / Docker | GitHub CI ผ่านครบ และ Cloud Build สร้าง/push image สำเร็จ; ไม่ใช่ผล Local build |
-| GCP Deployment | migration job ผ่าน; revision `toktickit-00001-b9p` Ready และ traffic 100% |
+| GCP Deployment | migration job ผ่าน; ตรวจ revision Ready และ traffic 100% หลังแต่ละ release ตามหลักฐาน run |
 | Acceptance | health/DB/UI/login/me/logout ผ่าน URL สาธารณะโดยไม่ใช้ Google IAM token; business E2E ยังไม่ทดสอบ |
 | Public access | เปิด https://toktickit-zygw3pmwua-as.a.run.app แล้ว ด้วย `--no-invoker-iam-check` เฉพาะบริการ; effective requireInvokerIam=false |
-| CI/CD | CI ผ่าน; ยังไม่มี CD อัตโนมัติไป GCP ใน workflow ปัจจุบัน |
+| CI/CD | reusable CI + Auto Deploy บน main ผ่านจริง; ใช้ WIF, SHA tag/digest, migration gate และ public smoke |
 
 ค่า Billing account, project และสถานะเครดิตเป็นผลตรวจในวันที่ระบุ ต้องตรวจใหม่ก่อนใช้ คู่มือนักศึกษาต้องให้แต่ละคนตรวจบัญชีและ project ของตนเอง ไม่คัดลอก project ของทีมไปใช้โดยไม่ตรวจ
 
@@ -266,7 +268,7 @@ PROJECT_ID=tikxd-test-20261021 bash deploy/deploy.sh --demo
 
 นำลำดับ Build → Migration → Deploy ที่ซ้อมสำเร็จไปทำอัตโนมัติใน pipeline เดิม โดยต้องเลือกและตั้ง GitHub → GCP authentication ก่อน ไม่แจก service-account key ให้ผู้เรียน และไม่ใส่สิทธิ์จัดการ IAM/Secrets/DB ทั้งหมดไว้ใน pipeline เพียงเพื่อเรียก provisioning script ซ้ำ
 
-สถานะช่วงนี้: Deploy ครั้งแรกในโปรเจกต์บริษัทผ่านแล้ว แต่ยังไม่ได้ติดตั้ง CD อัตโนมัติ ต้องกำหนดทางเข้าเว็บสำหรับผู้ทดสอบและผ่าน business E2E ก่อนสรุปความพร้อมเดโมเต็มรูปแบบ
+สถานะช่วงนี้: Auto Deploy ผ่านจริงหลัง merge main แล้ว ใช้ GitHub runner build image และ WIF เชื่อม GCP ตรวจ health/DB/UI/categories อัตโนมัติ ส่วน login ตรวจแยกหลัง Deploy ผ่าน; login ใน workflow ยังเป็น optional และ business E2E ต้องทดสอบกับบอมต่อ ดูหลักฐานและวิธี rollback ใน [คู่มือ Auto Deploy](auto-deploy-th.md)
 
 
 ## ประมาณค่าใช้จ่ายสำหรับนักศึกษา — ตรวจ 21 ต.ค. 2026
