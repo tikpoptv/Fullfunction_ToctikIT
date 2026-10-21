@@ -7,6 +7,7 @@ vi.mock("../../src/api.js", async () => {
     fetchRequesters: vi.fn().mockResolvedValue([]),
     fetchCategories: vi.fn().mockResolvedValue([]),
     fetchSystems: vi.fn().mockResolvedValue([]),
+    fetchAssignees: vi.fn().mockResolvedValue([]),
     fetchTickets: vi.fn().mockResolvedValue({
       tickets: [
         {

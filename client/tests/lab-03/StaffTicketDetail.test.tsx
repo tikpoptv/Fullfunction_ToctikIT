@@ -1,12 +1,14 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import App from "../../src/App.js";
+import { fetchAssignees, fetchAdminUsers } from "../../src/api.js";
 
 vi.mock("../../src/api.js", async () => {
   return {
     fetchRequesters: vi.fn().mockResolvedValue([]),
     fetchCategories: vi.fn().mockResolvedValue([]),
     fetchSystems: vi.fn().mockResolvedValue([]),
+    fetchAssignees: vi.fn().mockResolvedValue([]),
     fetchTickets: vi.fn().mockResolvedValue({ tickets: [], pagination: { page: 1, limit: 10, totalCount: 0, totalPages: 1 } }),
     fetchAdminUsers: vi.fn().mockResolvedValue([]),
     fetchTicketDetails: vi.fn().mockResolvedValue({
@@ -49,6 +51,27 @@ vi.mock("../../src/api.js", async () => {
 });
 
 describe("IT Staff Ticket Detail", () => {
+  it("loads assignment choices for IT Staff without calling admin-only user APIs", async () => {
+    vi.mocked(fetchAdminUsers).mockClear().mockRejectedValue(new Error("Forbidden"));
+    vi.mocked(fetchAssignees).mockResolvedValue([
+      { id: 10, name: "Available Support", role: "ITStaff" },
+      { id: 11, name: "Available Administrator", role: "Administrator" },
+    ]);
+    sessionStorage.clear();
+    sessionStorage.setItem("auth_token", "staff-token");
+    sessionStorage.setItem("current_screen", "detail");
+    sessionStorage.setItem("current_ticket_id", "101");
+    sessionStorage.setItem("current_user", JSON.stringify({
+      id: 10, name: "Sarah Support", email: "sarah.s@example.com", role: "ITStaff",
+      isActive: true, mustChangePassword: false,
+    }));
+    const view = render(<App />);
+    expect(await screen.findByRole("option", { name: "Available Support (ITStaff)" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Available Administrator (Administrator)" })).toBeInTheDocument();
+    expect(fetchAdminUsers).not.toHaveBeenCalled();
+    view.unmount();
+  });
+
   it("renders the IT Operations Control Panel in details view", async () => {
     sessionStorage.clear();
     sessionStorage.setItem("auth_token", "staff-token");
