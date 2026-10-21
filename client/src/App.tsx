@@ -577,8 +577,9 @@ export default function App() {
       setActionFollowUpNote("");
       setActionAttachmentNotes("");
 
-      const acts = await fetchActionsTaken(ticketDetails.id);
-      setActionsTakenList(acts);
+      // Creating an action also changes Ticket.updatedAt on the server.
+      // Refresh the version used by subsequent owner/status/priority writes.
+      await loadTicketDetails();
     } catch (err: any) {
       setActionError(err.message || "Failed to add action taken.");
     } finally {
@@ -1686,7 +1687,7 @@ export default function App() {
                       id="ownerSelect"
                       className="form-select form-select-sm"
                       value={ticketDetails.ownerId || ""}
-                      disabled={workflowUpdating}
+                      disabled={workflowUpdating || actionSubmitting}
                       onChange={(e) => handleOwnerChange(e.target.value)}
                     >
                       <option value="">Unassigned</option>
@@ -1699,7 +1700,7 @@ export default function App() {
                       id="statusSelect"
                       className="form-select form-select-sm"
                       value={ticketDetails.currentStatus}
-                      disabled={workflowUpdating}
+                      disabled={workflowUpdating || actionSubmitting}
                       onChange={(e) => handleStatusChange(e.target.value)}
                     >
                       <option value={ticketDetails.currentStatus}>{ticketDetails.currentStatus} (Current)</option>
@@ -1716,7 +1717,7 @@ export default function App() {
                       id="prioritySelect"
                       className="form-select form-select-sm"
                       value={ticketDetails.itPriority || ticketDetails.requestedPriority}
-                      disabled={workflowUpdating}
+                      disabled={workflowUpdating || actionSubmitting}
                       onChange={(e) => handlePriorityChange(e.target.value)}
                     >
                       <option value="LOW">LOW</option>
