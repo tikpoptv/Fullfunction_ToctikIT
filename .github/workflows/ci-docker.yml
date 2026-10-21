@@ -1,8 +1,7 @@
 name: CI & Docker Build
 
 on:
-  push:
-    branches: [main]
+  workflow_call:
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -11,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -45,8 +44,10 @@ jobs:
 
       - name: Check deployment scripts without accessing GCP
         run: |
-          bash -n deploy/deploy.sh deploy/teardown.sh
+          bash -n deploy/deploy.sh deploy/teardown.sh deploy/release.sh
           bash deploy/tests/test_deploy_stub.sh
+          bash deploy/tests/test_release_stub.sh
+          python3 -m unittest discover -s deploy/tests -p 'test_smoke.py'
 
       - name: Install & Test Backend (Prisma Migrate + Seed + Vitest)
         working-directory: ./server

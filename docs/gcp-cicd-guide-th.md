@@ -1,8 +1,8 @@
 # คู่มือเตรียม GCP และ CI/CD สำหรับ TokTickIT
 
-สถานะ: **ร่างก่อนซ้อมจริง** — 21 ตุลาคม 2026 (Asia/Bangkok)
+สถานะ: **Deploy และเปิดลิงก์สาธารณะแล้ว; business E2E/CD ยังไม่ครบ** — 21 ตุลาคม 2026 (Asia/Bangkok)
 
-คู่มือนี้อิง source commit `ab3eecb10390fce801f69c422677d13faa239898` ของ fork `tikpoptv/Fullfunction_ToctikIT` ยังไม่ใช่หลักฐานว่า Deploy หรือทดสอบครบแล้ว
+เริ่มสำรวจจาก source commit `ab3eecb10390fce801f69c422677d13faa239898` ของ fork `tikpoptv/Fullfunction_ToctikIT` แล้วใช้ runtime source `b744eed61413c380c188b5ee7d62b8ea2d402798` ที่แก้ log และผ่าน CI สำหรับ Deploy ครั้งแรก อ่านบทซ้อมตามขั้นตอนสั้นได้ที่ [บทซ้อมแรก](gcp-first-lab-th.md)
 
 ## 1. ผู้รับผิดชอบและเป้าหมาย
 
@@ -23,16 +23,18 @@
 
 | รายการ | ผลตรวจ |
 |---|---|
-| บัญชี Google | `jedsadaporn.pann@mail.kmutt.ac.th` เข้า Console ได้ |
-| Billing | มี `My Billing Account` ประเภท Free trial account |
-| Free Trial พร้อมใช้ | ยังไม่ยืนยัน: ล่าสุดหน้า Welcome แสดง pending และ Credits แสดง No credits to display |
-| Project ที่พบหลังสมัคร | `ace-mile-512308-n6` ชื่อ My First Project ภายใต้ `mail.kmutt.ac.th` |
-| เครื่องสำหรับทำงาน | macOS; ตอนตรวจล่าสุดพื้นที่เหลือประมาณ 272 MiB จึงยังไม่ติดตั้ง dependency หรือ Build Docker |
+| บัญชี Google สำหรับรอบซ้อมบริษัท | `supachok.d@riffai.org` |
+| Billing รอบบริษัท | ผู้ใช้เลือก `My Billing Account` ของบริษัท; ตรวจ `billingEnabled=true` แล้ว |
+| Free Trial บัญชีนักศึกษาเดิม | ยังไม่ยืนยันเครดิต: pending และ Credits แสดง No credits to display จึงไม่ได้ใช้ Deploy |
+| Project สำหรับ Deploy จริง | `tikxd-test-20261021` ชื่อ `tikxd test` ภายใต้ `riffai.org` |
+| เครื่องสำหรับทำงาน | macOS; ไม่ติดตั้ง dependency หรือ Build Docker บนเครื่อง ใช้ GitHub runner/Cloud Build |
 | Fork และ upstream | ตรวจ GitHub parent แล้วและตั้ง remote; ตอน fetch `origin/main` กับ `upstream/main` ต่างกัน 0/0 commits |
-| Deploy script | มี `deploy/deploy.sh`; ตรวจ Bash syntax, DRY_RUN และ offline regression 6 กรณีสำเร็จ |
-| Local build / tests / Docker | ยังไม่ได้รันใน checkout นี้ |
-| GCP Deployment / E2E | ยังไม่ได้ทำ |
-| CI/CD | มี CI; ยังไม่มี CD ไป GCP ใน workflow ปัจจุบัน |
+| Deploy script | syntax, dry-run, offline regression และ Deploy ครั้งแรกผ่าน; public IAM มี warning |
+| Build / tests / Docker | GitHub CI ผ่านครบ และ Cloud Build สร้าง/push image สำเร็จ; ไม่ใช่ผล Local build |
+| GCP Deployment | migration job ผ่าน; revision `toktickit-00001-b9p` Ready และ traffic 100% |
+| Acceptance | health/DB/UI/login/me/logout ผ่าน URL สาธารณะโดยไม่ใช้ Google IAM token; business E2E ยังไม่ทดสอบ |
+| Public access | เปิด https://toktickit-zygw3pmwua-as.a.run.app แล้ว ด้วย `--no-invoker-iam-check` เฉพาะบริการ; effective requireInvokerIam=false |
+| CI/CD | CI ผ่าน; ยังไม่มี CD อัตโนมัติไป GCP ใน workflow ปัจจุบัน |
 
 ค่า Billing account, project และสถานะเครดิตเป็นผลตรวจในวันที่ระบุ ต้องตรวจใหม่ก่อนใช้ คู่มือนักศึกษาต้องให้แต่ละคนตรวจบัญชีและ project ของตนเอง ไม่คัดลอก project ของทีมไปใช้โดยไม่ตรวจ
 
@@ -138,12 +140,12 @@ npm run dev
 
 ## 8. เตรียม Deploy ครั้งแรก
 
-ขั้นนี้ยังไม่ได้รันจริง ให้ตรวจ Free Trial, งบประมาณ, project, IAM และ source ก่อน
+รอบบริษัทได้รันแล้วตามผลด้านบน สำหรับ environment ใหม่ให้ตรวจ Billing, งบประมาณ, project, IAM และ source ก่อนเสมอ
 
 ตรวจคำสั่งที่สคริปต์จะใช้ได้โดยไม่เรียก GCP:
 
 ```bash
-DRY_RUN=1 PROJECT_ID=ace-mile-512308-n6 REGION=asia-southeast1 bash deploy/deploy.sh
+DRY_RUN=1 PROJECT_ID=tikxd-test-20261021 REGION=asia-southeast1 bash deploy/deploy.sh
 ```
 
 DRY_RUN แสดงทั้งคำสั่งตรวจและคำสั่งสร้างเพื่ออธิบาย flow ไม่ใช่การตรวจ IAM, quota, Billing, ราคา หรือยืนยันว่า resource จะสร้างได้
@@ -172,8 +174,8 @@ DRY_RUN แสดงทั้งคำสั่งตรวจและคำส
 
 ## 10. Acceptance ที่ต้องเก็บร่วมกับบอม
 
-- [ ] Health ผ่าน และ readiness เชื่อม DB ผ่าน
-- [ ] UI โหลดและ API ทำงานจาก URL จริง
+- [x] Health ผ่าน และ readiness เชื่อม DB ผ่าน (ผ่าน IAM-authenticated request)
+- [x] UI โหลดและ API ทำงานจาก Cloud Run URL สาธารณะโดยไม่ใช้ localhost
 - [ ] Login และเปลี่ยนรหัสเริ่มต้นสำเร็จ
 - [ ] Requester สร้าง ticket และติดตาม ticket ของตนได้
 - [ ] IT Staff บันทึก Actions Taken และปรับสถานะตามสิทธิ์ได้
@@ -206,7 +208,10 @@ E2E specs มีใน `e2e/` แต่ยังไม่พบ root package man
 - แก้ deploy script ให้ปิดบัง argument รหัสผ่านและไม่พิมพ์ initial admin/demo password ลง output พร้อมแก้ README ให้เปิด Secret Manager ดูค่าเป็นการส่วนตัว
 - Offline regression: first run, rerun, partial setup, migration failure, demo และ dry run ผ่าน; ทุกคำสั่ง gcloud ถูกแทนด้วย stub จึงไม่ใช่ผลทดสอบ GCP จริง
 - เพิ่ม offline regression ใน CI, สิทธิ์ checkout แบบอ่านอย่างเดียว, timeout และยกเลิก CI ของ branch เดิมเมื่อมี push ใหม่
-- ไม่ติดตั้ง dependency, ไม่รัน app tests หรือ Build Docker บนเครื่องนี้; ให้ GitHub runner ทำขั้นเหล่านี้ และยังไม่ Deploy
+- ไม่ติดตั้ง dependency, ไม่รัน app tests หรือ Build Docker บนเครื่องนี้; GitHub CI ผ่านและ Cloud Build สร้าง image สำเร็จ
+- รอบบริษัทสร้างโปรเจกต์ใหม่ ผูก Billing ตามที่ผู้ใช้เลือก เตรียม resources, migrate และ Deploy สำเร็จ ตรวจ revision image digest ตรงกับ Build แล้ว
+- เริ่มแรกเพิ่ม allUsers ไม่ผ่าน จึงทดสอบ private service ก่อน ต่อมาผู้ใช้ขอเปิดสาธารณะ ตรวจ effective requireInvokerIam=false แล้วตั้ง --no-invoker-iam-check เฉพาะบริการตามวิธีของ Google; ไม่เปลี่ยน org policy
+- Smoke ผ่าน health/ready/UI/login/me/logout ทั้ง private, proxy และ URL สาธารณะโดยไม่ใช้ Google IAM token; initial admin ยังต้องเปลี่ยนรหัสเองก่อนใช้งานจริง
 - บันทึกกิจกรรมตั้งแต่สมัครบัญชีอยู่ที่ `../output/gcp-student-eligibility-2026-10-21/steps-th.txt` นอก repo; ผล GitHub run และ PR ให้ยึดบันทึกนี้และหน้า Checks จริง
 
 ## 13. ลำดับสำหรับใช้สอนรอบแรก
@@ -221,7 +226,7 @@ E2E specs มีใน `e2e/` แต่ยังไม่พบ root package man
 
 ### ช่วง B: Deploy ด้วยตนเองหนึ่งครั้ง
 
-ทำหลังตรวจ Free Trial พร้อมใช้และค่าตั้งต้นในข้อ 8 แล้ว เปิด Cloud Shell จากบัญชีมหาวิทยาลัย เลือก project ของผู้เรียน จากนั้น clone **fork ของตนเอง**:
+ทำหลังตรวจ Billing พร้อมใช้และค่าตั้งต้นในข้อ 8 แล้ว เปิด Cloud Shell จากบัญชีที่ใช้ในรอบนั้น เลือก project ของตนเอง จากนั้น clone **fork ของตนเอง**:
 
 ```bash
 git clone https://github.com/tikpoptv/Fullfunction_ToctikIT.git
@@ -244,13 +249,13 @@ gcloud config get-value project
 ขั้นทดลองอ่านคำสั่ง (ไม่สร้าง resource):
 
 ```bash
-DRY_RUN=1 PROJECT_ID=ace-mile-512308-n6 bash deploy/deploy.sh --demo
+DRY_RUN=1 PROJECT_ID=tikxd-test-20261021 bash deploy/deploy.sh --demo
 ```
 
 เมื่อ Billing, งบประมาณ, IAM และการเปิด endpoint พร้อมแล้ว คำสั่ง Deploy สำหรับ **project ทีมนี้เท่านั้น** คือ:
 
 ```bash
-PROJECT_ID=ace-mile-512308-n6 bash deploy/deploy.sh --demo
+PROJECT_ID=tikxd-test-20261021 bash deploy/deploy.sh --demo
 ```
 
 คำสั่งจริงนี้สร้างทรัพยากรที่มีค่าใช้งาน ใช้ Secret Manager เก็บรหัส และเปิด HTTP endpoint ภายนอก ห้ามรันขณะ Free Trial ยัง pending; สำหรับนักศึกษาแต่ละคนต้องเปลี่ยน project ให้ตรงกับของตน
@@ -261,4 +266,47 @@ PROJECT_ID=ace-mile-512308-n6 bash deploy/deploy.sh --demo
 
 นำลำดับ Build → Migration → Deploy ที่ซ้อมสำเร็จไปทำอัตโนมัติใน pipeline เดิม โดยต้องเลือกและตั้ง GitHub → GCP authentication ก่อน ไม่แจก service-account key ให้ผู้เรียน และไม่ใส่สิทธิ์จัดการ IAM/Secrets/DB ทั้งหมดไว้ใน pipeline เพียงเพื่อเรียก provisioning script ซ้ำ
 
-สถานะช่วงนี้: ยังไม่ได้ติดตั้งหรือเชื่อม CD เพราะ GCP ยัง pending และยังไม่ผ่านการ Deploy ครั้งแรก
+สถานะช่วงนี้: Deploy ครั้งแรกในโปรเจกต์บริษัทผ่านแล้ว แต่ยังไม่ได้ติดตั้ง CD อัตโนมัติ ต้องกำหนดทางเข้าเว็บสำหรับผู้ทดสอบและผ่าน business E2E ก่อนสรุปความพร้อมเดโมเต็มรูปแบบ
+
+
+## ประมาณค่าใช้จ่ายสำหรับนักศึกษา — ตรวจ 21 ต.ค. 2026
+
+ต่อหนึ่งโปรเจกต์ตามสเปกจริง สิงคโปร์ ZONAL db-f1-micro / SSD 10 GiB และ Cloud Run 1 CPU / 512 MiB แบบ request-based ใช้เบา ๆ ในห้องเรียน ไม่ใช่ยอดใบแจ้งหนี้จริง
+
+ตรวจหน้า https://cloud.google.com/sql/pricing โดยเลือก Singapore (asia-southeast1):
+
+- db-f1-micro: USD 0.0147/ชั่วโมง × 730 = USD 10.731/เดือน
+- SSD: USD 0.000326027/GiB-hour × 10 × 730 = USD 2.380/เดือน
+- ฐาน SQL compute+disk รวม USD 13.111/เดือน ก่อน backup/network
+- Backup: USD 0.000153425/GiB-hour คิดตามขนาดที่เก็บจริง ไม่ได้คิดจากดิสก์ที่จองทั้งหมด สมมติ backup เฉลี่ย 1–10 GiB จะเพิ่มประมาณ USD 0.112–1.120/เดือน
+- Cloud Run และ Cloud Build อาจอยู่ใน Free Tier หากใช้เบาและโควตา Billing ยังเหลือ ไม่ใช่การรับประกันว่าทุกโปรเจกต์ฟรี
+- Secret Manager 3 versions อยู่ในโควตาฟรี 6 versions/account หากยังไม่ได้ใช้ร่วมกับโปรเจกต์อื่น; Registry ฟรี 0.5 GiB/account แล้วประมาณ USD 0.10/GiB-month
+
+งบประมาณใช้งานเบาต่อโปรเจกต์: USD 14–18/เดือน หรือประมาณ 490–630 บาท ที่สมมติ USD 1 = 35 บาท (ไม่ใช่อัตราแลกเปลี่ยนที่ยืนยัน) ยังไม่รวมภาษี เครดิต ส่วนลดเฉพาะบัญชี หรือ traffic/build จำนวนมาก
+
+เฉพาะ SQL compute+disk: 8 ชั่วโมง USD 0.1437; 24 ชั่วโมง USD 0.4310; 7 วัน USD 3.0173 ต้องลบทรัพยากรหลังจบจึงจะใช้ตัวเลขช่วงสั้นนี้ได้ การปิดแท็บเว็บไม่หยุด SQL และ stop instance ยังมี storage/backup/IP บางส่วนที่อาจคิดต่อ ไม่ลบหรือหยุดทรัพยากรในการประเมินนี้
+
+อ้างอิง: https://cloud.google.com/run/pricing ; https://cloud.google.com/build/pricing ; https://cloud.google.com/artifact-registry/pricing ; https://cloud.google.com/secret-manager/pricing
+
+
+### สรุปงบและการจบแลบ
+
+| ระยะเวลาเปิด SQL + SSD 10 GiB | USD เฉพาะ SQL compute + disk | บาทที่อัตราสมมติ 35 บาท/USD |
+|---|---:|---:|
+| 8 ชั่วโมง | 0.1437 | ประมาณ 5 |
+| 24 ชั่วโมง | 0.4310 | ประมาณ 15 |
+| 7 วัน | 3.0173 | ประมาณ 106 |
+| 730 ชั่วโมง | 13.1110 | ประมาณ 459 |
+
+ตัวเลขตารางยังไม่รวม backup, Cloud Run, Build, Registry, Storage และ network; งบรวมใช้งานเบารายเดือนให้ใช้ USD 14–18 ต่อหนึ่งชุดทรัพยากร ไม่ใช่ต่อผู้เข้าเว็บ หากแต่ละกลุ่มใช้ชุดเดียวกัน ค่าใช้จ่ายฐานข้อมูลประจำชุดนั้นแชร์กันได้ แต่ traffic จะรวมตามการใช้งาน
+
+ถ้า Free Trial USD 300 เปิดใช้จริงและเครดิตยังไม่หมดอายุ ค่าบริการที่เข้าเงื่อนไขจะหักจากเครดิตก่อน ต้องตรวจยอดและวันหมดอายุในบัญชีของผู้เรียน ไม่ใช้สถานะบัญชีบริษัทของทีมยืนยันแทนนักศึกษา
+
+ลำดับที่ต้องใส่ในบทเรียนหลังจบแลบ:
+
+1. ตรวจ project ID ของตนเองและเก็บข้อมูล/หลักฐานที่ต้องใช้ส่งงาน
+2. ตรวจรายการที่จะลบและยืนยันก่อนใช้ teardown เพราะฐานข้อมูลจะถูกลบด้วย
+3. ตรวจทรัพยากรคงเหลือ โดยเฉพาะ SQL, backup ที่เก็บไว้, image ใน Registry และ bucket ของ Cloud Build
+4. ตรวจ Billing หลังระบบอัปเดตยอด; การตั้ง Budget เป็นการแจ้งเตือน ไม่ใช่เพดานหยุดค่าใช้จ่าย
+
+บันทึกรอบนี้เป็นการประเมินและจัดทำคู่มือเท่านั้น ยังไม่ได้ลบหรือหยุดทรัพยากรเดโม
