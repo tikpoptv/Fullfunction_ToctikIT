@@ -15,6 +15,8 @@ export interface Category {
   name: string;
 }
 
+export type Assignee = Pick<User, "id" | "name" | "role">;
+
 export interface RelatedSystem {
   id: number;
   name: string;
@@ -206,6 +208,12 @@ export async function changePassword(currentPassword: string, newPassword: strin
 }
 
 // 2. Reference APIs
+export async function fetchAssignees(): Promise<Assignee[]> {
+  const res = await fetch(`${API_URL}/api/assignees`, { headers: getHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch assignees");
+  return res.json();
+}
+
 export async function fetchRequesters(): Promise<{ id: number; name: string; email: string }[]> {
   const res = await fetch(`${API_URL}/api/requesters`, { headers: getHeaders() });
   if (!res.ok) throw new Error("Failed to fetch requesters");
