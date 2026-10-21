@@ -25,10 +25,10 @@
 
 | รายการ | ผลตรวจ |
 |---|---|
-| บัญชี Google สำหรับรอบซ้อมบริษัท | `student@example.invalid` |
-| Billing รอบบริษัท | ผู้ใช้เลือก `My Billing Account` ของบริษัท; ตรวจ `billingEnabled=true` แล้ว |
+| บัญชี Google สำหรับรอบซ้อม | บัญชีที่ได้รับอนุญาตให้ใช้โปรเจกต์ทดสอบ |
+| Billing รอบซ้อม | ผูกบัญชี Billing สำหรับทดสอบและตรวจ `billingEnabled=true` แล้ว |
 | Free Trial บัญชีนักศึกษาเดิม | ยังไม่ยืนยันเครดิต: pending และ Credits แสดง No credits to display จึงไม่ได้ใช้ Deploy |
-| Project สำหรับ Deploy จริง | `tikxd-test-20261021` ชื่อ `tikxd test` ภายใต้ `example.invalid` |
+| Project สำหรับ Deploy จริง | `tikxd-test-20261021` ชื่อ `tikxd test` |
 | เครื่องสำหรับทำงาน | macOS; ไม่ติดตั้ง dependency หรือ Build Docker บนเครื่อง ใช้ GitHub runner/Cloud Build |
 | Fork และ upstream | ตรวจ GitHub parent แล้วและตั้ง remote; ตอน fetch `origin/main` กับ `upstream/main` ต่างกัน 0/0 commits |
 | Deploy script | syntax, dry-run, offline regression และ Deploy ครั้งแรกผ่าน; public IAM มี warning |
