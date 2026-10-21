@@ -129,7 +129,7 @@ npm run dev
 
 ## 7. สิ่งที่ CI ปัจจุบันทำ
 
-เมื่อ push หรือเปิด PR เข้า `main` workflow ปัจจุบันจะ:
+เมื่อเปิด PR เข้า `main` จะเรียก CI โดยตรง ส่วน push เข้า `main` จะเรียก CI เดียวกันจาก Deploy workflow ก่อนปล่อยรุ่น โดย CI จะ:
 
 1. เปิด PostgreSQL 16 service บน GitHub runner
 2. ใช้ Node.js 20
@@ -138,7 +138,7 @@ npm run dev
 4. Frontend: `npm ci`, `npm test` และ `npm run build`
 5. Build Dockerfile รวม UI/API
 
-ยังไม่ push image ไป GCP, ไม่ Deploy และไม่รัน Playwright E2E จึงยังเรียกว่า CD ครบวงจรไม่ได้ ต้องตรวจว่า Actions เปิดใช้ใน fork และอ่านผล workflow จริงหลัง push
+CI job ตรวจ test/build ตามรายการนี้ หลัง CI ผ่านบน main จึงมี CD job แยกสำหรับ push image, migration, Deploy และ public smoke ซึ่งทดสอบผ่านจริงแล้ว ดู [คู่มือ Auto Deploy](auto-deploy-th.md) ส่วน Playwright/business E2E ยังไม่ได้ทดสอบบน Cloud
 
 ## 8. เตรียม Deploy ครั้งแรก
 
@@ -176,15 +176,15 @@ DRY_RUN แสดงทั้งคำสั่งตรวจและคำส
 
 ## 10. Acceptance ที่ต้องเก็บร่วมกับบอม
 
-- [x] Health ผ่าน และ readiness เชื่อม DB ผ่าน (ผ่าน IAM-authenticated request)
+- [x] Health ผ่าน และ readiness เชื่อม DB ผ่าน ทั้ง authenticated และ URL สาธารณะ
 - [x] UI โหลดและ API ทำงานจาก Cloud Run URL สาธารณะโดยไม่ใช้ localhost
 - [ ] Login และเปลี่ยนรหัสเริ่มต้นสำเร็จ
 - [ ] Requester สร้าง ticket และติดตาม ticket ของตนได้
 - [ ] IT Staff บันทึก Actions Taken และปรับสถานะตามสิทธิ์ได้
 - [ ] Dashboard และการจำกัดสิทธิ์แต่ละ role ตรงกับ specification
 - [ ] attachment และ session ทำงานหลัง redeploy ตามที่ระบบออกแบบ
-- [ ] deploy commit ใหม่ผ่าน pipeline และพิสูจน์ revision/image ที่ได้รับ traffic
-- [ ] ซ้อม rollback พร้อมระบุข้อจำกัดของ migration
+- [x] deploy commit ใหม่ผ่าน pipeline และพิสูจน์ revision/image ที่ได้รับ traffic (run 39599526273 attempt 2)
+- [x] ซ้อม rollback พร้อมระบุข้อจำกัดของ migration (run 39600194691; ไม่ย้อน schema/data)
 
 E2E specs มีใน `e2e/` แต่ยังไม่พบ root package manifest หรือ Playwright config; specs ที่ตรวจมี localhost URL และรหัสทดสอบตายตัว จึงยังใช้ยืนยัน Cloud acceptance โดยตรงไม่ได้ ต้องเตรียม runner, test accounts และ base URL ก่อน
 
