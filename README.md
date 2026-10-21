@@ -2,6 +2,8 @@
 
 Complete full-stack implementation of **TokTickIT (Lab 1 – Lab 4)** built with **React 18 + TypeScript + Vite + Bootstrap 5** (Frontend) and **Express + TypeScript + Prisma + PostgreSQL** (Backend).
 
+Thai TA setup and teaching sequence: [GCP and CI/CD rehearsal guide](docs/gcp-cicd-guide-th.md) (draft; check its verification status before deploying).
+
 ---
 
 ## 1. Key Capabilities (Lab 1 – Lab 4)
@@ -98,7 +100,7 @@ The repository includes an idempotent deployment script for **Google Cloud Run +
      ```
 5. **Sign in & Change Initial Password:**
    - Open the printed **Service URL** (`https://toktickit-...a.run.app`).
-   - Sign in as `john.smith@example.com` using the randomly generated `Admin Password` printed at the end of `deploy.sh` (or retrieve it anytime via `gcloud secrets versions access latest --secret=toktickit-admin-password`).
+   - Open Secret Manager in the selected project and view the latest version of `toktickit-admin-password` privately. Sign in as `john.smith@example.com` with that value. The deployment script does not print passwords in its output; do not copy secret values into shared logs or screenshots.
    - Because `mustChangePassword` is `true`, the system will immediately prompt you to set a new strong password.
 
 ### Redeploying Safely (Zero Data Loss)
