@@ -124,7 +124,7 @@ Health/readiness ผ่านยังไม่ใช่ End-to-End ผ่าน
 
 วันเวลา · ผู้ทำ · บัญชี/project · commit · คำสั่งที่รัน · ผล/ข้อความผิดพลาดที่ไม่มี secret · resource/revision ที่ตรวจจาก Console · ผลทดสอบ browser
 
-สถานะก่อนเริ่มบทนี้: CI ของ commit `b744eed61413c380c188b5ee7d62b8ea2d402798` ผ่าน Backend tests, Frontend tests/build, offline deployment regression และ Docker build แล้วใน [run 39574507298](https://github.com/tikpoptv/Fullfunction_ToctikIT/actions/runs/39574507298) แต่ยังไม่ใช่ผล Deploy บน GCP และยังไม่ได้ติดตั้ง CD
+สถานะก่อนเริ่มบทนี้: CI ของ commit `b744eed61413c380c188b5ee7d62b8ea2d402798` ผ่าน Backend tests, Frontend tests/build, offline deployment regression และ Docker build แล้วใน [run 39574507298](https://github.com/tikpoptv/Fullfunction_ToctikIT/actions/runs/39574507298) ซึ่งเป็นหลักฐาน CI ในตอนนั้น ต่อมา Deploy สาธารณะ, Auto Deploy และ rollback ผ่านแล้วตาม [หลักฐานรอบทีม](auto-deploy-th.md#หลักฐานรอบทีม) โดย business E2E ยังเหลือ
 
 
 ## งบประมาณและการจบแลบ
