@@ -28,6 +28,7 @@ vi.mock("../../src/api.js", async () => {
       updatedAt: new Date().toISOString(),
       attachments: [],
     }),
+    fetchActionsTaken: vi.fn().mockResolvedValue([]),
     fetchComments: vi.fn().mockResolvedValue([]),
     fetchNotes: vi.fn().mockResolvedValue([]),
     fetchStaffDashboard: vi.fn().mockResolvedValue({
