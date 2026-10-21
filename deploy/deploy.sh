@@ -31,10 +31,21 @@ for arg in "$@"; do
 done
 
 run_cmd() {
+  # Log the command without exposing generated database credentials.
+  local arg
   if [ "$DRY_RUN" = "1" ]; then
-    echo "[DRY_RUN] $*"
+    printf '[DRY_RUN] '
   else
-    echo "+ $*"
+    printf '+ '
+  fi
+  for arg in "$@"; do
+    case "$arg" in
+      --password=*) printf '%s ' '--password=<REDACTED>' ;;
+      *) printf '%q ' "$arg" ;;
+    esac
+  done
+  printf '\n'
+  if [ "$DRY_RUN" != "1" ]; then
     "$@"
   fi
 }
@@ -262,16 +273,8 @@ printf '%s\n' "Service URL    : ${SERVICE_URL}"
 printf '%s\n' "Health Check   : ${SERVICE_URL}/api/health"
 printf '%s\n' "Readiness Check: ${SERVICE_URL}/api/ready"
 printf '%s\n' "Admin Email    : john.smith@example.com (mustChangePassword: true)"
-if [ -n "$GENERATED_ADMIN_PASSWORD" ]; then
-  printf '%s\n' "Admin Password : ${GENERATED_ADMIN_PASSWORD}  (Save this now; stored in Secret Manager: ${SECRET_ADMIN_PASS})"
-else
-  printf '%s\n' "Admin Password : (Existing secret '${SECRET_ADMIN_PASS}' preserved; view with: gcloud secrets versions access latest --secret=${SECRET_ADMIN_PASS})"
-fi
+printf '%s\n' "Admin Password : Stored in Secret Manager: ${SECRET_ADMIN_PASS} (not printed)."
 if [ "$SEED_DEMO_DATA" = "true" ]; then
-  if [ -n "$GENERATED_DEMO_PASSWORD" ]; then
-    printf '%s\n' "Demo Password  : ${GENERATED_DEMO_PASSWORD}  (Stored in Secret Manager: ${SECRET_DEMO_PASS})"
-  else
-    printf '%s\n' "Demo Password  : (Existing secret '${SECRET_DEMO_PASS}' preserved; view with: gcloud secrets versions access latest --secret=${SECRET_DEMO_PASS})"
-  fi
+  printf '%s\n' "Demo Password  : Stored in Secret Manager: ${SECRET_DEMO_PASS} (not printed)."
 fi
 printf '%s\n' "=================================================================="
