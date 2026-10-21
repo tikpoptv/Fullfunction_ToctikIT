@@ -16,7 +16,7 @@ describe("Authorization API", () => {
     const hashed = hashPassword(password);
 
     // Clean up first to ensure idempotency
-    const emails = ["req.auth@example.com", "it.auth@example.com", "admin.auth@example.com", "other.req@example.com"];
+    const emails = ["req.auth@example.com", "it.auth@example.com", "admin.auth@example.com", "other.req@example.com", "inactive.assignee@example.com"];
     await getPrisma().attachmentBlob.deleteMany({
       where: { attachment: { ticket: { requester: { email: { in: emails } } } } },
     });
@@ -85,6 +85,17 @@ describe("Authorization API", () => {
     const loginA = await request(app).post("/api/auth/login").send({ email: a.email, password });
     adminToken = loginA.body.token;
 
+    await getPrisma().user.create({
+      data: {
+        name: "Inactive assignee",
+        email: "inactive.assignee@example.com",
+        passwordHash: hashed,
+        role: "ITStaff",
+        isActive: false,
+        mustChangePassword: false,
+      },
+    });
+
     // Create another Requester and their ticket to test isolation
     const otherR = await getPrisma().user.create({
       data: {
@@ -122,6 +133,23 @@ describe("Authorization API", () => {
       .get("/api/admin/users")
       .set("Authorization", `Bearer ${requesterToken}`);
     expect(res.status).toBe(403);
+  });
+
+  it("restricts assignment choices to authenticated IT Staff and Administrators", async () => {
+    expect((await request(app).get("/api/assignees")).status).toBe(401);
+    expect((await request(app).get("/api/assignees").set("Authorization", `Bearer ${requesterToken}`)).status).toBe(403);
+
+    for (const token of [itStaffToken, adminToken]) {
+      const res = await request(app).get("/api/assignees").set("Authorization", `Bearer ${token}`);
+      expect(res.status).toBe(200);
+      expect(res.body.some((u: any) => u.name === "Test IT Staff")).toBe(true);
+      expect(res.body.some((u: any) => u.name === "Test Admin")).toBe(true);
+      expect(res.body.some((u: any) => u.name === "Inactive assignee")).toBe(false);
+      for (const user of res.body) {
+        expect(["ITStaff", "Administrator"]).toContain(user.role);
+        expect(Object.keys(user).sort()).toEqual(["id", "name", "role"]);
+      }
+    }
   });
 
   it("blocks IT Staff from User Management list", async () => {
