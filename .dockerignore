@@ -10,3 +10,4 @@ playwright-report
 server/uploads
 *.db
 *.sqlite
+gha-creds-*.json
