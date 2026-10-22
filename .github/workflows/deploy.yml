@@ -44,7 +44,7 @@ jobs:
       IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
       ROLLBACK: ${{ inputs.image_tag != '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Validate deployment settings
         env:
           WIF_PROVIDER: ${{ vars.WIF_PROVIDER }}
