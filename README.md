@@ -2,7 +2,7 @@
 
 Complete full-stack implementation of **TokTickIT (Lab 1 – Lab 4)** built with **React 18 + TypeScript + Vite + Bootstrap 5** (Frontend) and **Express + TypeScript + Prisma + PostgreSQL** (Backend).
 
-Thai TA setup and teaching sequence: [GCP and CI/CD rehearsal guide](docs/gcp-cicd-guide-th.md) (draft; check its verification status before deploying).
+TA setup and teaching sequence: [GCP and CI/CD rehearsal guide](docs/gcp-cicd-guide.md) (draft; check its verification status before deploying).
 
 ---
 
