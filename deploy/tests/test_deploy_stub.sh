@@ -94,6 +94,17 @@ for MODE in first_run rerun partial job-fail demo; do
   else
     grep -q '^run deploy ' "$GCLOUD_LOG"
   fi
+  if grep -q '^projects add-iam-policy-binding .*roles/secretmanager.secretAccessor' "$GCLOUD_LOG"; then
+    echo 'FAIL: runtime has project-wide secret access'; exit 1
+  fi
+  for secret in toktickit-database-url toktickit-admin-password; do
+    grep -q "^secrets add-iam-policy-binding $secret .*roles/secretmanager.secretAccessor" "$GCLOUD_LOG"
+  done
+  if [ "$MODE" = demo ]; then
+    grep -q '^secrets add-iam-policy-binding toktickit-demo-password ' "$GCLOUD_LOG"
+  elif grep -q '^secrets add-iam-policy-binding toktickit-demo-password ' "$GCLOUD_LOG"; then
+    echo 'FAIL: granted optional demo secret in non-demo mode'; exit 1
+  fi
   case "$MODE" in
     first_run)
       grep -q -- '--edition=enterprise' "$GCLOUD_LOG"

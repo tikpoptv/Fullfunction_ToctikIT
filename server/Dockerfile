@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:24-alpine
 WORKDIR /app
 RUN apk add --no-cache openssl
 
@@ -18,6 +18,8 @@ ENV NODE_ENV=production
 ENV TZ=Asia/Bangkok
 ENV PORT=3000
 EXPOSE 3000
+
+USER node
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "dist/index.js"]
