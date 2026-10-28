@@ -44,7 +44,9 @@ jobs:
       IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
       ROLLBACK: ${{ inputs.image_tag != '' }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Validate deployment settings
         env:
           WIF_PROVIDER: ${{ vars.WIF_PROVIDER }}
@@ -54,11 +56,11 @@ jobs:
           test -n "$WIF_PROVIDER" && test -n "$WIF_SERVICE_ACCOUNT"
           [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]] || { echo 'Image tag must be a full 40-character commit SHA.'; exit 1; }
       - name: Authenticate to Google Cloud without a key
-        uses: google-github-actions/auth@v3
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
           service_account: ${{ vars.WIF_SERVICE_ACCOUNT }}
-      - uses: google-github-actions/setup-gcloud@v3
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
       - name: Build and push image
         if: env.ROLLBACK != 'true'
         run: |
@@ -68,6 +70,11 @@ jobs:
           docker push "$IMAGE"
       - name: Verify image, migrate and deploy
         run: bash deploy/release.sh
+      - name: Setup Python 3.14
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.14"
+
       - name: Smoke test public URL
         env:
           SMOKE_EMAIL: ${{ vars.SMOKE_EMAIL }}

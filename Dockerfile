@@ -1,7 +1,7 @@
 # ============================================================================
 # Stage 1: Build Frontend (React + TypeScript + Vite)
 # ============================================================================
-FROM node:20-alpine AS client-builder
+FROM node:24-alpine AS client-builder
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm ci
@@ -12,7 +12,7 @@ RUN npm run build
 # ============================================================================
 # Stage 2: Build Backend (Express + TypeScript + Prisma)
 # ============================================================================
-FROM node:20-alpine AS server-builder
+FROM node:24-alpine AS server-builder
 WORKDIR /app/server
 RUN apk add --no-cache openssl
 COPY server/package*.json ./
@@ -23,7 +23,7 @@ RUN npx prisma generate && npm run build
 # ============================================================================
 # Stage 3: Unified Production Runtime (Serves API + Built React SPA on :3000)
 # ============================================================================
-FROM node:20-alpine AS production
+FROM node:24-alpine AS production
 WORKDIR /app/server
 RUN apk add --no-cache openssl
 
@@ -41,6 +41,8 @@ ENV NODE_ENV=production
 ENV TZ=Asia/Bangkok
 ENV PORT=3000
 EXPOSE 3000
+
+USER node
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "dist/index.js"]

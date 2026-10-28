@@ -157,12 +157,6 @@ run_cmd gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --condition=None \
   --quiet
 
-run_cmd gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-  --member="serviceAccount:${SA_EMAIL}" \
-  --role="roles/secretmanager.secretAccessor" \
-  --condition=None \
-  --quiet
-
 # 6. Create DB User & Store DATABASE_URL in Secret Manager (only if secret does not exist yet)
 if [ "$DRY_RUN" = "1" ]; then
   run_cmd gcloud secrets describe "$SECRET_DB_URL" --project "$PROJECT_ID"
@@ -213,6 +207,18 @@ if [ "$SEED_DEMO_DATA" = "true" ]; then
   fi
   JOB_SECRETS="${JOB_SECRETS},DEMO_USER_PASSWORD=${SECRET_DEMO_PASS}:latest"
 fi
+
+# Grant access only to this app's secrets, after they exist.
+RUNTIME_SECRETS=("$SECRET_DB_URL" "$SECRET_ADMIN_PASS")
+if [ "$SEED_DEMO_DATA" = "true" ]; then
+  RUNTIME_SECRETS+=("$SECRET_DEMO_PASS")
+fi
+for secret in "${RUNTIME_SECRETS[@]}"; do
+  run_cmd gcloud secrets add-iam-policy-binding "$secret" \
+    --member="serviceAccount:${SA_EMAIL}" \
+    --role="roles/secretmanager.secretAccessor" \
+    --project "$PROJECT_ID" --quiet
+done
 
 # 9. Build & Push Unified Container Image via Cloud Build
 run_cmd gcloud builds submit \
